@@ -33,6 +33,7 @@ const DIRECT_MODE = { advancedSection: true, sleep: true, debounce: true, direct
 
 const BY_FAMILY: Readonly<Record<string, Partial<DriverTraits>>> = {
   "logitech-hidpp": { logitech: true },
+  "logitech-lgs": {},
   "egg-op1": { advancedSection: true, eggControls: true, eggFamily: true },
   "egg-we": { eggFamily: true },
   "finalmouse-ulx": { advancedSection: true, finalmouse: true },

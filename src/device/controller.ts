@@ -2233,8 +2233,10 @@ export function applyDpiStageValue(stage: number, rawDpi: number): void {
     emit();
     return;
   }
+  const batchStages = clientHasMethod("setDpiStages");
   stageChange({
     key: `dpi-stage-${stage}`,
+    group: batchStages ? "dpi-stages" : undefined,
     label: `Stage ${stage + 1} · ${dpi.toLocaleString()} DPI`,
     command: `Set DPI stage ${stage + 1} to ${dpi.toLocaleString()}`,
     progress: `Setting stage ${stage + 1} to ${dpi.toLocaleString()} DPI…`,
@@ -2248,6 +2250,14 @@ export function applyDpiStageValue(stage: number, rawDpi: number): void {
       if ((status.activeDpiStage ?? 0) === stage) status.dpi = dpi;
     },
     apply: async () => {
+      const client = requireSettingsClient() as SupportedClient & {
+        setDpiStages?(next: number[]): Promise<number[]>;
+      };
+      const pendingStages = latestDeviceStatus ? withPendingChanges(latestDeviceStatus).dpiStages : null;
+      if (typeof client.setDpiStages === "function" && pendingStages) {
+        await client.setDpiStages(pendingStages);
+        return;
+      }
       await requireClientMethod("setDpiStageValue", "DPI stage value").setDpiStageValue(stage, dpi);
     },
   });
