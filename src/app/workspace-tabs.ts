@@ -9,7 +9,7 @@ export function availableWorkspaceTabs(
   const hasButtons = has.eggButtons || has.razerButtons || has.mxMasterButtons || has.atkButtons
     || has.buttonMapping || has.debounce || has.lightforce || has.eggSpdt || has.superstrike;
   const hasProfiles = has.profiles || has.keychronNapeLayers || has.atkProfile
-    || has.onboardProfiles || has.pulsarPro;
+    || has.onboardProfiles || has.pulsarPro || has.buttonLayers;
   return WORKSPACE_TAB_ORDER.filter((tab) => {
     if (tab === "lighting") return has.lighting || has.teevolutionDpiLighting;
     if (tab === "buttons") return hasButtons;

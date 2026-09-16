@@ -18,6 +18,7 @@ import type { ControlSnapshot, WorkspaceTab } from "../device/types";
 import { t, tp, connectionText, type I18nKey } from "../i18n";
 import { Diagnostics, LogitechDetails } from "./Diagnostics";
 import { KeychronNapeLayers } from "./KeychronNapeLayers";
+import { ButtonLayerProfiles } from "./ButtonLayerProfiles";
 import { Profiles } from "./Profiles";
 import { Superstrike } from "./Superstrike";
 import { DpiCard } from "./cards/DpiCard";
@@ -453,7 +454,7 @@ export function Workspace({
     show(has.incott, ["advanced"]) ? <IncottCard key="incott" snapshot={snapshot} /> : null,
     show(has.atkProfile, ["profiles"]) ? <AtkProfileCard key="atk-profile" snapshot={snapshot} /> : null,
     show(has.atkReceiver, ["advanced"]) ? <AtkReceiverCard key="atk-receiver" snapshot={snapshot} /> : null,
-    show(has.onboardProfiles && !snapshot.traits.teevolution, ["profiles"])
+    show(has.onboardProfiles && !snapshot.traits.teevolution && !has.buttonLayers, ["profiles"])
       ? <OnboardProfileCard key="onboard-profile" snapshot={snapshot} /> : null,
     show(has.pulsarPro, ["profiles"]) ? <PulsarProCard key="pulsarpro" snapshot={snapshot} /> : null,
   ].filter((node) => node !== null);
@@ -469,6 +470,7 @@ export function Workspace({
   const showProfiles = show(has.profiles, ["profiles"]);
   const showTeevolutionProfiles = show(snapshot.traits.teevolution && has.onboardProfiles, ["profiles"]);
   const showNapeLayers = show(has.keychronNapeLayers, ["profiles"]);
+  const showButtonLayers = show(has.buttonLayers, ["profiles"]);
   const showSuperstrike = show(has.superstrike, ["buttons"]);
   const showLogitechDetails = show(has.logitechDetails, ["advanced"]);
   const showMxMaster = on(tab, ["advanced"])
@@ -477,7 +479,7 @@ export function Workspace({
   const showOverview = on(tab, ["overview"]);
 
   const anyPanel = performance.length > 0 || advanced.length > 0 || lighting.length > 0
-    || showProfiles || showTeevolutionProfiles || showNapeLayers || showSuperstrike
+    || showProfiles || showTeevolutionProfiles || showNapeLayers || showButtonLayers || showSuperstrike
     || showLogitechDetails || showMxMaster || showDiagnostics || showOverview;
 
   const slotsAvailable = snapshot.profile.slotsAvailable;
@@ -504,6 +506,7 @@ export function Workspace({
       {showProfiles ? <Profiles snapshot={snapshot} onShareProfile={onShareProfile} /> : null}
       {showTeevolutionProfiles ? <TeevolutionProfileCard snapshot={snapshot} /> : null}
       {showNapeLayers ? <KeychronNapeLayers snapshot={snapshot} /> : null}
+      {showButtonLayers ? <ButtonLayerProfiles snapshot={snapshot} /> : null}
 
       {performance.length > 0 ? (
         <section

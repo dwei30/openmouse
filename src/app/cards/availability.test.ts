@@ -306,6 +306,28 @@ test("Terra Pro onboard banks use the generic profile card", () => {
   assert.equal(has.onboardProfiles, true);
 });
 
+test("LGS button layers open the profiles assignment editor", () => {
+  const has = cardAvailability(snapshot({
+    status: {
+      ui: {
+        family: "logitech-lgs",
+        buttonLayerEditor: {
+          layers: ["primary", "g-shift"],
+          names: ["Left click"],
+          actions: ["Left click"],
+          keyboard: true,
+        },
+      },
+      buttonLayerAssignments: [{ layer: "primary", button: 0, action: "Left click", raw: [1, 0, 0] }],
+      activeProfile: 2,
+      profileCount: 3,
+    },
+  }));
+  assert.equal(has.buttonLayers, true);
+  assert.equal(has.profiles, false);
+  assert.equal(has.onboardProfiles, true);
+});
+
 test("the generic button card follows the K-snake key-map read", () => {
   // The driver opens the advanced section only when getKeys() succeeded,
   // so the card must not appear on a silent dongle even though the family

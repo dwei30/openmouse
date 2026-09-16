@@ -92,10 +92,14 @@ import {
 } from "./profile-key";
 import type { MouseLighting, MouseStatus } from "@openmouse/protocol/drivers/mouse-types";
 import {
+  G600_BUTTON_ACTIONS,
   LOGITECH_HAPTIC_EFFECTS,
   LOGITECH_HAPTIC_PRESETS,
   LOGITECH_SMART_SHIFT_OFF,
+  g600EncodeKeyboard,
+  g600EncodeNamedAction,
   logitechControlName,
+  type G600NamedAction,
   type LogitechHapticPreset,
   type LogitechReprogrammableControl,
 } from "@openmouse/protocol/logitech";
@@ -3846,6 +3850,88 @@ export function applyPowerMode(mode: string): void {
       await requireClientMethod("setPowerMode", "the performance mode").setPowerMode(mode);
     },
   });
+}
+
+const BUTTON_LAYER_GROUP = "button-layer-assignments";
+
+function buttonLayerPreview(
+  action: string,
+  keyboard?: { key: number; modifiers: number },
+): { action: string; raw: number[] } {
+  if (keyboard) {
+    const encoded = g600EncodeKeyboard(keyboard.key, keyboard.modifiers);
+    return { action: "Keyboard shortcut", raw: [encoded.code, encoded.modifier, encoded.key] };
+  }
+  if ((G600_BUTTON_ACTIONS as readonly string[]).includes(action)) {
+    const encoded = g600EncodeNamedAction(action as G600NamedAction);
+    return { action, raw: [encoded.code, encoded.modifier, encoded.key] };
+  }
+  return { action, raw: [0, 0, 0] };
+}
+
+function stageButtonLayerEdit(
+  layer: "primary" | "g-shift",
+  button: number,
+  next: { action: string; raw: number[] },
+): void {
+  if (!hasActiveClient() || !clientHasMethod("setButtonLayerAssignments")) return;
+  const locked = latestDeviceStatus?.ui?.buttonLayerEditor?.lockPrimaryCount ?? 0;
+  if (layer === "primary" && button < locked) return;
+  stageChange({
+    key: `button-layer-${layer}-${button}`,
+    group: BUTTON_LAYER_GROUP,
+    label: `G${button + 1} ${next.action}`,
+    command: `Map ${layer} G${button + 1} to ${next.action}`,
+    progress: `Assigning G${button + 1} to ${next.action}…`,
+    preview: (status) => {
+      const assignments = status.buttonLayerAssignments?.slice() ?? [];
+      const index = assignments.findIndex((entry) => entry.layer === layer && entry.button === button);
+      const assignment = { layer, button, action: next.action, raw: next.raw };
+      if (index >= 0) assignments[index] = assignment;
+      else assignments.push(assignment);
+      status.buttonLayerAssignments = assignments;
+    },
+    apply: async () => {
+      const client = requireClientMethod("setButtonLayerAssignments", "button assignments") as unknown as {
+        setButtonLayerAssignments(edits: Array<{
+          layer: "primary" | "g-shift";
+          button: number;
+          action?: string;
+          raw?: number[];
+        }>): Promise<void>;
+      };
+      const device = latestDeviceStatus?.buttonLayerAssignments ?? [];
+      const pending = latestDeviceStatus
+        ? withPendingChanges(latestDeviceStatus).buttonLayerAssignments ?? []
+        : [];
+      const edits = pending.filter((assignment) => {
+        const current = device.find((entry) => entry.layer === assignment.layer && entry.button === assignment.button);
+        if (!current) return true;
+        return current.action !== assignment.action
+          || current.raw[0] !== assignment.raw[0]
+          || current.raw[1] !== assignment.raw[1]
+          || current.raw[2] !== assignment.raw[2];
+      });
+      await client.setButtonLayerAssignments(edits);
+    },
+  });
+}
+
+export function applyButtonLayerAssignment(
+  layer: "primary" | "g-shift",
+  button: number,
+  action: string,
+): void {
+  stageButtonLayerEdit(layer, button, buttonLayerPreview(action));
+}
+
+export function applyButtonLayerKeyboard(
+  layer: "primary" | "g-shift",
+  button: number,
+  key: number,
+  modifiers: number,
+): void {
+  stageButtonLayerEdit(layer, button, buttonLayerPreview("Keyboard shortcut", { key, modifiers }));
 }
 
 /**

@@ -16,7 +16,7 @@ test("a connected mouse exposes only tabs backed by available controls", () => {
 });
 
 test("every profile surface retains the profiles tab", () => {
-  for (const surface of ["profiles", "keychronNapeLayers", "atkProfile", "onboardProfiles", "pulsarPro"] as const) {
+  for (const surface of ["profiles", "keychronNapeLayers", "atkProfile", "onboardProfiles", "pulsarPro", "buttonLayers"] as const) {
     assert.equal(availableWorkspaceTabs(true, availability({ [surface]: true })).includes("profiles"), true, surface);
   }
 });
